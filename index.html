@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>DV Cüzdan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00ff66">
+
+<style>
+body{margin:0;font-family:Arial;background:#0b0b0b;color:white}
+.hidden{display:none}
+.box{background:#161616;margin:15px;padding:15px;border-radius:12px}
+.logo{text-align:center;font-size:34px;font-weight:bold}
+.d{color:#00ff66}.v{color:orange}
+input,button{width:100%;padding:10px;margin-top:8px;border-radius:8px;border:none}
+button{background:#00aa55;color:white}
+.red{background:#cc3333}
+.orange{background:orange;color:black}
+.tx{border-bottom:1px solid #333;padding:6px 0;font-size:14px}
+small{opacity:.7}
+</style>
+</head>
+
+<body>
+
+<div id="auth" class="box">
+  <div class="logo"><span class="d">D</span><span class="v">V</span> Cüzdan</div>
+  <input id="user" placeholder="Kullanıcı adı">
+  <input id="pass" type="password" placeholder="Şifre">
+  <input id="pin" type="password" placeholder="PIN (4 hane)">
+  <button onclick="login()">Giriş / Kayıt</button>
+</div>
+
+<div id="wallet" class="hidden">
+<div class="logo"><span class="d">D</span><span class="v">V</span> Cüzdan</div>
+
+<div class="box"><h2 id="bal">0 DV</h2></div>
+
+<div class="box">
+<input id="amt" type="number" placeholder="DV miktarı">
+<button onclick="add()">➕ Ekle</button>
+<button class="red" onclick="sub()">➖ Çıkar</button>
+</div>
+
+<div class="box">
+<h3>📤 DV Gönder</h3>
+<input id="to" placeholder="Alıcı kullanıcı">
+<input id="send" type="number" placeholder="DV miktarı">
+<button class="orange" onclick="transfer()">Gönder</button>
+</div>
+
+<div class="box">
+<h3>🔳 QR Kod</h3>
+<div id="qr"></div>
+<button onclick="makeQR()">QR Oluştur</button>
+</div>
+
+<div class="box">
+<h3>📜 Blockchain</h3>
+<div id="log"></div>
+</div>
+
+<div class="box">
+<button onclick="admin()">👮 Admin</button>
+<button class="red" onclick="logout()">Çıkış</button>
+</div>
+</div>
+
+<script src="qrcode.min.js"></script>
+<script>
+/* PWA SERVICE WORKER */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+
+let users = JSON.parse(localStorage.getItem("dv_users")) || {};
+let current=null;
+
+function login(){
+ let u=user.value,p=pass.value,pi=pin.value;
+ if(!u||!p||pi.length<4)return alert("Eksik bilgi");
+ if(!users[u]) users[u]={pass:p,pin:pi,balance:0,chain:[]};
+ else if(users[u].pass!==p||users[u].pin!==pi) return alert("Hatalı");
+ current=u; save();
+ auth.classList.add("hidden");
+ wallet.classList.remove("hidden");
+ render();
+}
+
+function add(){let a=+amt.value;if(a<=0)return;
+ users[current].balance+=a; block("➕",a);}
+function sub(){let a=+amt.value;if(a>users[current].balance)return;
+ users[current].balance-=a; block("➖",a);}
+
+function transfer(){
+ let t=to.value,a=+send.value;
+ if(!users[t]||a>users[current].balance) return alert("Hatalı işlem");
+ users[current].balance-=a;
+ users[t].balance+=a;
+ block("📤 "+t,a);
+}
+
+function makeQR(){
+ qr.innerHTML="";
+ new QRCode(qr,{
+  text: JSON.stringify({from:current,amount:1}),
+  width:150,height:150
+ });
+}
+
+function block(type,amt){
+ let c=users[current].chain;
+ let prev=c.length?c[c.length-1].hash:"GENESIS";
+ let hash=btoa(type+amt+Date.now()).slice(0,20);
+ c.push({type,amt,prev,hash,time:new Date().toLocaleString()});
+ save(); render();
+}
+
+function admin(){
+ if(prompt("Admin kodu")==="DV-ADMIN")
+  alert("Toplam kullanıcı: "+Object.keys(users).length);
+}
+
+function render(){
+ bal.innerText=users[current].balance+" DV";
+ log.innerHTML=users[current].chain.map(b=>
+ `<div class="tx">${b.type} ${b.amt} DV<br>
+ <small>${b.time}<br>Hash:${b.hash}<br>Prev:${b.prev}</small></div>`
+ ).join("");
+}
+function save(){localStorage.setItem("dv_users",JSON.stringify(users))}
+function logout(){location.reload()}
+</script>
+</body>
+</html>
