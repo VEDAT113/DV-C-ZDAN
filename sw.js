@@ -1,4 +1,4 @@
-const CACHE = "dv-wallet-v4""
+const CACHE = "dv-wallet-v5""
 const FILES = [
   "./",
   "./index.html",
