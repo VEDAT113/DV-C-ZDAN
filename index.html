@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DV Cüzdan</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .wallet {
+        background: #1c1c1c;
+        padding: 25px;
+        border-radius: 15px;
+        width: 320px;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .logo {
+        font-size: 36px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .logo .d {
+        color: #00ff66; /* Yeşil */
+    }
+
+    .logo .v {
+        color: orange; /* Turuncu */
+    }
+
+    .currency {
+        font-size: 14px;
+        opacity: 0.8;
+        margin-bottom: 20px;
+    }
+
+    .balance {
+        font-size: 32px;
+        margin-bottom: 20px;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+
+    button {
+        width: 48%;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .add {
+        background: #00aa55;
+        color: white;
+    }
+
+    .remove {
+        background: #cc3333;
+        color: white;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="wallet">
+    <div class="logo">
+        <span class="d">D</span><span class="v">V</span> Cüzdan
+    </div>
+
+    <div class="currency">Para Birimi: <b>DVium (DV)</b></div>
+
+    <div class="balance">
+        Bakiye: <span id="balance">0</span> DV
+    </div>
+
+    <input type="number" id="amount" placeholder="Miktar gir">
+
+    <div class="buttons">
+        <button class="add" onclick="addDV()">Ekle</button>
+        <button class="remove" onclick="removeDV()">Çıkar</button>
+    </div>
+</div>
+
+<script>
+    let balance = localStorage.getItem("dv_balance");
+    if (balance === null) balance = 0;
+    balance = parseFloat(balance);
+    updateUI();
+
+    function addDV() {
+        let amount = parseFloat(document.getElementById("amount").value);
+        if (!amount || amount <= 0) return alert("Geçerli miktar gir!");
+        balance += amount;
+        save();
+    }
+
+    function removeDV() {
+        let amount = parseFloat(document.getElementById("amount").value);
+        if (!amount || amount <= 0) return alert("Geçerli miktar gir!");
+        if (amount > balance) return alert("Yetersiz bakiye!");
+        balance -= amount;
+        save();
+    }
+
+    function save() {
+        localStorage.setItem("dv_balance", balance);
+        updateUI();
+        document.getElementById("amount").value = "";
+    }
+
+    function updateUI() {
+        document.getElementById("balance").innerText = balance.toFixed(2);
+    }
+</script>
+
+</body>
+</html>
