@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>DV Bank</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#00c46a">
+
+<style>
+:root{
+ --green:#00c46a;
+ --orange:#ff8c1a;
+ --bg:#f4f6fb;
+ --card:#fff;
+ --text:#111;
+ --muted:#777;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:-apple-system,Segoe UI,Roboto;
+ background:var(--bg);
+ color:var(--text);
+}
+.hidden{display:none}
+
+/* HEADER */
+header{
+ background:linear-gradient(135deg,var(--green),#009e58);
+ padding:24px;
+ color:#fff;
+ border-radius:0 0 28px 28px;
+}
+
+/* CARD */
+.card{
+ background:var(--card);
+ margin:14px;
+ padding:16px;
+ border-radius:18px;
+ box-shadow:0 12px 28px rgba(0,0,0,.08);
+}
+
+/* BANK CARD */
+.bankcard{
+ background:linear-gradient(135deg,#111,#333);
+ color:#fff;
+ border-radius:22px;
+ padding:20px;
+ height:160px;
+ position:relative;
+}
+.bankcard .logo{
+ font-weight:700;
+ font-size:18px;
+}
+.bankcard .num{
+ font-size:20px;
+ letter-spacing:2px;
+ margin:22px 0;
+}
+.bankcard .name{font-size:14px}
+.bankcard .dv{
+ position:absolute;
+ right:16px;
+ bottom:16px;
+ font-weight:700;
+ color:var(--green);
+}
+
+/* INPUT */
+input,button{
+ width:100%;
+ padding:14px;
+ margin-top:10px;
+ border-radius:14px;
+ border:1px solid #ddd;
+ font-size:15px;
+}
+button{border:none;font-weight:600}
+
+/* BUTTONS */
+.green{background:var(--green);color:#fff}
+.orange{background:var(--orange);color:#fff}
+.gray{background:#ecf0f1}
+
+/* NAV */
+nav{
+ position:fixed;
+ bottom:0;
+ width:100%;
+ background:#fff;
+ display:flex;
+ justify-content:space-around;
+ border-top:1px solid #eee;
+}
+nav button{
+ background:none;
+ border:none;
+ padding:14px;
+ font-size:13px;
+}
+
+/* PROFILE */
+.profile{
+ display:flex;
+ align-items:center;
+ gap:14px;
+}
+.avatar{
+ width:64px;
+ height:64px;
+ border-radius:50%;
+ background:#ddd;
+ object-fit:cover;
+}
+
+/* LIST */
+.list-item{
+ padding:10px 0;
+ border-bottom:1px solid #eee;
+}
+.list-item:last-child{border:none}
+
+/* ADMIN */
+.admin-stat{
+ display:flex;
+ justify-content:space-between;
+ padding:8px 0;
+ font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <h2>DV Bank</h2>
+ <small>Dijital Cüzdan & Sosyal Finans</small>
+</header>
+
+<!-- LOGIN -->
+<div id="login" class="card">
+ <h3>Giriş</h3>
+ <input id="u" placeholder="Kullanıcı adı">
+ <input id="p" type="password" placeholder="Şifre">
+ <input id="pin" type="password" placeholder="PIN">
+ <button class="green" onclick="login()">Giriş Yap</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+<!-- HOME -->
+<div id="home">
+ <div class="card bankcard">
+  <div class="logo">DV BANK</div>
+  <div class="num">•••• 4567</div>
+  <div class="name" id="cardName"></div>
+  <div class="dv">DV</div>
+ </div>
+
+ <div class="card">
+  <h3>Bakiye</h3>
+  <h1 id="bal">0 DV</h1>
+ </div>
+
+ <div class="card">
+  <button class="green" onclick="add()">Para Ekle</button>
+  <button class="orange" onclick="withdraw()">Para Çek</button>
+ </div>
+</div>
+
+<!-- SOCIAL -->
+<div id="social" class="hidden">
+ <div class="card">
+  <h3>Arkadaşlar</h3>
+  <input id="fadd" placeholder="Kullanıcı adı">
+  <button class="gray" onclick="addFriend()">Ekle</button>
+  <div id="friends"></div>
+ </div>
+</div>
+
+<!-- PROFILE -->
+<div id="profile" class="hidden">
+ <div class="card profile">
+  <img id="avatar" class="avatar">
+  <div>
+   <b id="name"></b><br>
+   <small id="role"></small>
+  </div>
+ </div>
+
+ <div class="card">
+  <input type="file" accept="image/*" onchange="avatarChange(this)">
+ </div>
+
+ <div class="card">
+  <button class="gray" onclick="logout()">Çıkış</button>
+ </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin" class="hidden">
+ <div class="card">
+  <h3>Admin Panel</h3>
+  <input id="mu" placeholder="Kullanıcı">
+  <input id="ma" type="number" placeholder="DV">
+  <button class="green" onclick="mint()">Para Bas</button>
+ </div>
+
+ <div class="card">
+  <h4>İstatistik</h4>
+  <div id="stats"></div>
+ </div>
+</div>
+
+</div>
+
+<nav class="hidden" id="nav">
+ <button onclick="show('home')">🏠</button>
+ <button onclick="show('social')">👥</button>
+ <button onclick="show('profile')">👤</button>
+ <button onclick="show('admin')">👮</button>
+</nav>
+
+<script>
+let users=JSON.parse(localStorage.dv||"{}"),cur;
+
+function login(){
+ let U=u.value,P=p.value,PI=pin.value;
+ if(!users[U]){
+  users[U]={p:P,pi:PI,b:0,f:[],a:"",ad:false};
+ }
+ if(users[U].p!==P||users[U].pi!==PI) return alert("Hatalı");
+
+ if(U==="admin"&&P==="DV-ADMIN"&&PI==="0000"){
+  users[U].ad=true;users[U].b=Infinity;
+ }
+ cur=U;save();
+ login.classList.add("hidden");
+ app.classList.remove("hidden");
+ nav.classList.remove("hidden");
+ render();
+}
+
+function render(){
+ cardName.innerText=cur;
+ name.innerText=cur;
+ role.innerText=users[cur].ad?"Admin":"Kullanıcı";
+ bal.innerText=users[cur].ad?"∞ DV":users[cur].b+" DV";
+ avatar.src=users[cur].a||"https://via.placeholder.com/64";
+
+ friends.innerHTML=users[cur].f.map(x=>`<div class=list-item>${x}</div>`).join("");
+
+ if(users[cur].ad){
+  admin.classList.remove("hidden");
+  stats.innerHTML=Object.keys(users).map(u=>
+   `<div class=admin-stat><span>${u}</span><b>${users[u].b}</b></div>`
+  ).join("");
+ }
+}
+
+function show(id){
+ ["home","social","profile","admin"].forEach(x=>{
+  document.getElementById(x).classList.add("hidden");
+ });
+ document.getElementById(id).classList.remove("hidden");
+}
+
+function add(){users[cur].b+=+prompt("DV");save();render()}
+function withdraw(){users[cur].b-=+prompt("DV");save();render()}
+function mint(){users[mu.value].b+=+ma.value;save();render()}
+function addFriend(){users[cur].f.push(fadd.value);save();render()}
+function avatarChange(i){
+ let r=new FileReader();
+ r.onload=()=>{users[cur].a=r.result;save();render()};
+ r.readAsDataURL(i.files[0]);
+}
+function save(){localStorage.dv=JSON.stringify(users)}
+function logout(){location.reload()}
+</script>
+
+</body>
+</html>
